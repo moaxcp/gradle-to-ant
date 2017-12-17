@@ -120,11 +120,107 @@ target to skip downloading the file when possible. Here is the complete target:
 ivy.dir is created and the file is downloaded unless ivy.file is available. taskdef is used to load the ant 
 tasks from the jar.
 
-# Adding antlibs
+## using ivy for dependency management
+
+Gradle projects have methods to configure repositories, configurations, and dependencies. While ivy has these 
+concepts the configuration has less conventions than gradle.
+
+## ivysettings.xml
+
+Ivy comes with [default settings](http://ant.apache.org/ivy/history/2.1.0/tutorial/defaultconf.htm) in the jar. 
+
+```
+<ivysettings>
+  <settings defaultResolver="default"/>
+  <include url="${ivy.default.settings.dir}/ivysettings-public.xml"/>
+  <include url="${ivy.default.settings.dir}/ivysettings-shared.xml"/>
+  <include url="${ivy.default.settings.dir}/ivysettings-local.xml"/>
+  <include url="${ivy.default.settings.dir}/ivysettings-main-chain.xml"/>
+  <include url="${ivy.default.settings.dir}/ivysettings-default-chain.xml"/>
+</ivysettings>
+```
+
+The includes elements above pointing to ${ivy.default.settings.dir} provide more default settings. These 
+settings 
+create a default-chain which will 
+resolve the local first and then the main chain. The main chain resolves to shared and public resolvers. This 
+is similar to resolving a local maven repo before resolving shared and public repositories. Our goal 
+is to use default setting and only override the public resolver so we can use jcenter. We can reuse these 
+settings replacing the public resolver.
+
+```
+<ivysettings>
+    <settings defaultResolver="default"/>
+    <resolvers>
+      <ibiblio name="public" root="https://jcenter.bintray.com/" m2compatible="true"/>
+    </resolvers>
+    <include url="${ivy.default.settings.dir}/ivysettings-shared.xml"/>
+    <include url="${ivy.default.settings.dir}/ivysettings-local.xml"/>
+    <include url="${ivy.default.settings.dir}/ivysettings-main-chain.xml"/>
+    <include url="${ivy.default.settings.dir}/ivysettings-default-chain.xml"/>
+</ivysettings>
+```
+
+Now we can add public dependencies to our project through jcenter. To do this we need to add another file: 
+ivy.xml.
+
+## ivy.xml
+
+ivy.xml declares configurations and dependencies for the project. It also contains information used to resolve 
+the project itself. ivy.xml can reuse properties from build.xml. It is useful to declare project info in 
+build.xml and then reference them in ivy.xml. This way project info is only declared once. This is especially 
+true for the project name.
+
+```
+<ivy-module version="2.0">
+    <info organisation="${project.organisation}" module="${ant.project.name}"/>
+</ivy-module>
+```
+
+Here we reuse the project name and add a new property called project.organisation.
+
+From here configuring ivy depends on what is needed for the project. A good start which may be more advanced is 
+to add build testing to the project. This will allow the build to be developed with automated tests. antunit 
+can be used to test the build but first it must be added.
+
+# Adding the first build dependencies
 
 Gradle has a concept of plugins. This allows developers to add new features to gradle such as support for 
 languages, publishing artifacts, and generating reports. An antlib has the same function. They add new types 
 and tasks to ant. Ivy is an example of an antlib. It add dependency management support to ant. Now that ivy is 
 loaded into the project it can be used to manage dependencies for bringing in other ant libraries.
 
+## build configuration
 
+Like gradle configurations, ivy configurations are sets of dependencies used for a specific purpose. The build 
+configuration is the set of build dependencies. It is be added to ivy.xml.
+
+```
+<ivy-module version="2.0">
+    <info organisation="${project.organisation}" module="${ant.project.name}"/>
+    <configurations defaultconfmapping="build->master">
+        <conf name="build" visibility="private"
+            description="libraries added to the ant build classpath"/>
+    </configurations>
+</ivy-module>
+```
+
+Now that we have a configuration a dependency can be added. Here is the full file.
+
+```
+<ivy-module version="2.0">
+    <info organisation="${project.organisation}" module="${ant.project.name}"/>
+    <configurations defaultconfmapping="build->master">
+        <conf name="build" visibility="private"
+            description="libraries added to the ant build classpath"/>
+    </configurations>
+    <dependencies>
+        <dependency org="org.apache.ant" name="ant-antunit" rev="1.3" conf="build"/>
+    </dependencies>
+</ivy-module>
+```
+
+# testing the build
+
+Gradle has support out of the box to test tasks and plugins for a project. The same can be done with 
+antunit.
