@@ -1,4 +1,5 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:if="ant:if"
     xmlns:unless="ant:unless"
     xmlns:au="antlib:org.apache.ant.antunit">
 
@@ -12,11 +13,17 @@
     <property name="ivy.settings.file" location="ivysettings.xml"/>
 
     <property name="build.dir" location="build"/>
+    <property name="download.dir" location="download"/>
+    <property name="ivy.dir" location="${download.dir}/ivy"/>
     <property name="reports.dir" location="${build.dir}/reports"/>
     <property name="reports.antunit.dir" location="${reports.dir}/antunit"/>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="clean-downloads">
+        <delete dir="download.dir"/>
     </target>
 
     <target name="clean-ivy-cache" depends="install-ivy">
@@ -30,13 +37,13 @@
     </target>
 
     <target name="install-ivy" depends="init-directories">
-        <local name="ivy.dir"/>
         <local name="ivy.file"/>
         <local name="ivy.available"/>
 
-        <property name="ivy.dir" location="${build.dir}/ivy"/>
         <property name="ivy.file" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
         <available file="${ivy.file}" property="ivy.present"/>
+
+        <echo if:set="ivy.present">ivy installed at ${ivy.file}</echo>
 
         <mkdir unless:set="ivy.present" dir="${ivy.dir}"/>
         <get unless:set="ivy.present" dest="${ivy.file}" 

@@ -1,7 +1,7 @@
 <project xmlns:au="antlib:org.apache.ant.antunit">
     <include file="build.xml" as="main"/>
 
-    <!--target name="tearDown" depends="main.clean"/-->
+    <target name="tearDown" depends="main.clean"/>
 
     <target name="test-project-name">
         <echo level="error">project name is ${ant.project.name}</echo>
