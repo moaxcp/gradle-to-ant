@@ -3,9 +3,7 @@
 This project implements gradle conventions in ant. It can be used to help learn gradle conventions or to help 
 prepare ant projects for a switch to gradle.
 
-# Conventions
-
-## project directory is project name
+# project directory is project name
 
 In gradle the project name defaults to the directory of the project. This can be changed in settings.gradle
 but it is a good convention to follow in ant. The project name in ant can be set dynamically by removing it 
@@ -25,7 +23,7 @@ Is changed to:
 </project>
 ```
 
-## build directory contains everything built
+# build directory contains everything built
 
 In gradle everything built goes into the build directory. A build directory can be implemented in ant.
 
@@ -45,7 +43,7 @@ Next we need to add tasks to initialize the build directory.
 </target>
 ```
 
-## clean deletes everything built
+# clean deletes everything built
 
 Simply delete build.dir.
 
@@ -55,7 +53,7 @@ Simply delete build.dir.
 </target>
 ```
 
-## dependency management made easy with ivy
+# dependency management made easy with ivy
 
 Gradle uses ivy concepts for dependency management. It is also a really good system for ant. In order to use
 ivy in ant it needs to be installed. There are two static locations ivy can be installed for use in ant.
@@ -68,7 +66,7 @@ version of ivy.
 
 Now that there is a build directory we can dynamically install ivy to the build directory at runtime.
 
-### installing ivy at runtime
+## installing ivy at runtime
 
 First we want to set a property for the version of ivy to use.
 
@@ -121,5 +119,12 @@ target to skip downloading the file when possible. Here is the complete target:
 
 ivy.dir is created and the file is downloaded unless ivy.file is available. taskdef is used to load the ant 
 tasks from the jar.
+
+# Adding antlibs
+
+Gradle has a concept of plugins. This allows developers to add new features to gradle such as support for 
+languages, publishing artifacts, and generating reports. An antlib has the same function. They add new types 
+and tasks to ant. Ivy is an example of an antlib. It add dependency management support to ant. Now that ivy is 
+loaded into the project it can be used to manage dependencies for bringing in other ant libraries.
 
 

@@ -1,0 +1,10 @@
+<ivy-module version="2.0">
+    <info organisation="${project.organisation}" module="${ant.project.name}"/>
+    <configurations defaultconfmapping="build->master">
+        <conf name="build" visibility="private" 
+            description="libraries added to the ant build classpath"/>
+    </configurations>
+    <dependencies>
+        <dependency org="org.apache.ant" name="ant-antunit" rev="1.3" conf="build"/>
+    </dependencies>
+</ivy-module>

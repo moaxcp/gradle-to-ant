@@ -1,17 +1,32 @@
-<project xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:unless="ant:unless">
+<project xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:unless="ant:unless"
+    xmlns:au="antlib:org.apache.ant.antunit">
+
     <description>
         Example project applying gradle conventions to ant.
     </description>
+    <property name="project.organisation" value="com.github.moaxcp"/>
     <basename property="ant.project.name" file="${basedir}"/>
+    <property name="project.version" value="0.0.0"/>
     <property name="ivy.version" value="2.4.0"/>
+    <property name="ivy.settings.file" location="ivysettings.xml"/>
+
     <property name="build.dir" location="build"/>
+    <property name="reports.dir" location="${build.dir}/reports"/>
+    <property name="reports.antunit.dir" location="${reports.dir}/antunit"/>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
     </target>
 
+    <target name="clean-ivy-cache" depends="install-ivy">
+        <ivy:cleancache/>
+    </target>
+
     <target name="init">
         <mkdir dir="${build.dir}"/>
+        <mkdir dir="${reports.dir}"/>
+        <mkdir dir="${reports.antunit.dir}"/>
     </target>
 
     <target name="install-ivy" depends="init">
@@ -28,5 +43,23 @@
             src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
 
         <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.file}"/>
+    </target>
+
+    <target name="init-ivy" depends="install-ivy">
+        <ivy:resolve/>
+    </target>
+
+    <target name="init-build" depends="init-ivy">
+        <ivy:cachepath pathid="build.classpath" conf="build"/>
+        <taskdef resource="org/apache/ant/antunit/antlib.xml" uri="antlib:org.apache.ant.antunit" 
+            classpathref="build.classpath"/>
+    </target>
+
+    <target name="unit-test-build" depends="init-build">
+        <au:antunit>
+            <fileset file="test.xml"/>
+            <au:plainlistener/>
+            <au:xmllistener todir="${reports.antunit.dir}"/>
+        </au:antunit>
     </target>
 </project>
