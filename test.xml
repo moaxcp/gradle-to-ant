@@ -1,10 +1,10 @@
 <project xmlns:au="antlib:org.apache.ant.antunit">
-    <import file="build.xml"/>
+    <include file="build.xml" as="main"/>
 
-    <!--target name="tearDown" depends="clean"/-->
+    <!--target name="tearDown" depends="main.clean"/-->
 
     <target name="test-project-name">
-        <echo>project name is ${ant.project.name}</echo>
+        <echo level="error">project name is ${ant.project.name}</echo>
         <au:assertTrue>
             <equals arg1="${ant.project.name}" arg2="gradle-to-ant"/>
         </au:assertTrue>

@@ -23,13 +23,13 @@
         <ivy:cleancache/>
     </target>
 
-    <target name="init">
+    <target name="init-directories">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${reports.dir}"/>
         <mkdir dir="${reports.antunit.dir}"/>
     </target>
 
-    <target name="install-ivy" depends="init">
+    <target name="install-ivy" depends="init-directories">
         <local name="ivy.dir"/>
         <local name="ivy.file"/>
         <local name="ivy.available"/>
@@ -55,7 +55,9 @@
             classpathref="build.classpath"/>
     </target>
 
-    <target name="unit-test-build" depends="init-build">
+    <target name="init" depends="init-ivy, init-build"/>
+
+    <target name="test-build" depends="init-build">
         <au:antunit>
             <fileset file="test.xml"/>
             <au:plainlistener/>
