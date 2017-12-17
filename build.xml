@@ -1,30 +1,32 @@
 <project xmlns:ivy="antlib:org.apache.ivy.ant" xmlns:unless="ant:unless">
+    <description>
+        Example project applying gradle conventions to ant.
+    </description>
     <basename property="ant.project.name" file="${basedir}"/>
-
     <property name="ivy.version" value="2.4.0"/>
-    <property name="build.dir" value="build"/>
-
-    <echo>Project: ${ant.project.name}</echo>
-    <echo>  Ant Version: ${ant.version}</echo>
-    <echo>  Ivy Version: ${ivy.version}</echo>
+    <property name="build.dir" location="build"/>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
     </target>
 
-    <target name="installIvy">
-        <local name="dir.ivy.jar"/>
-        <local name="ivy.jar"/>
+    <target name="init">
+        <mkdir dir="${build.dir}"/>
+    </target>
+
+    <target name="install-ivy" depends="init">
+        <local name="ivy.dir"/>
+        <local name="ivy.file"/>
         <local name="ivy.available"/>
 
-        <property name="dir.ivy.jar" value="${build.dir}/ivy"/>
-        <property name="ivy.jar" value="${dir.ivy.jar}/ivy-${ivy.version}.jar"/>
-        <available file="${ivy.jar}" property="ivy.present"/>
+        <property name="ivy.dir" location="${build.dir}/ivy"/>
+        <property name="ivy.file" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
+        <available file="${ivy.file}" property="ivy.present"/>
 
-        <mkdir unless:set="ivy.present" dir="${dir.ivy.jar}"/>
-        <get unless:set="ivy.present" dest="${ivy.jar}" 
+        <mkdir unless:set="ivy.present" dir="${ivy.dir}"/>
+        <get unless:set="ivy.present" dest="${ivy.file}" 
             src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
 
-        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.jar}"/>
+        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.file}"/>
     </target>
 </project>
