@@ -76,11 +76,11 @@ First we want to set a property for the version of ivy to use.
 
 This is a convienece property that will make it easy to update the version of ivy used.
 
-Next the `unless` xml namespace needs to be added to the project to build the task for installing ivy. This will 
-make more sense once the task is introduced.
+Next the `unless` and `if` xml namespace needs to be added to the project to build the task for installing ivy. 
+This will make more sense once the task is introduced.
 
 ```
-<project xmlns:unless="ant:unless">
+<project xmlns:unless="ant:unless" xmlns:if="ant:if">
 ```
 
 Now the install-ivy task is ready to be made. First we need to setup a few local properties.
@@ -108,6 +108,8 @@ target to skip downloading the file when possible. Here is the complete target:
     <property name="ivy.dir" location="${build.dir}/ivy"/>
     <property name="ivy.file" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
     <available file="${ivy.file}" property="ivy.present"/>
+
+    <echo if:set="ivy.present">ivy installed at ${ivy.file}</echo>
 
     <mkdir unless:set="ivy.present" dir="${ivy.dir}"/>
     <get unless:set="ivy.present" dest="${ivy.file}"
@@ -141,12 +143,11 @@ Ivy comes with [default settings](http://ant.apache.org/ivy/history/2.1.0/tutori
 ```
 
 The includes elements above pointing to ${ivy.default.settings.dir} provide more default settings. These 
-settings 
-create a default-chain which will 
-resolve the local first and then the main chain. The main chain resolves to shared and public resolvers. This 
-is similar to resolving a local maven repo before resolving shared and public repositories. Our goal 
-is to use default setting and only override the public resolver so we can use jcenter. We can reuse these 
-settings replacing the public resolver.
+settings create a default-chain which will resolve the local first and then the main chain. The main chain 
+resolves to shared and public resolvers. This is similar to resolving a local maven repo before resolving 
+shared and public repositories. Our goal is to use default setting and only override the public resolver 
+so we can use jcenter. We can reuse these settings while only replacing the public resolver to use
+jcenter.
 
 ```
 <ivysettings>
@@ -167,7 +168,9 @@ ivy.xml.
 ## ivy.xml
 
 ivy.xml declares configurations and dependencies for the project. It also contains information used to resolve 
-the project itself. ivy.xml can reuse properties from build.xml. It is useful to declare project info in 
+the project itself. It is similar to setting up configurations and dependencies in gradle.
+
+ivy.xml can reuse properties from build.xml. It is useful to declare project info in 
 build.xml and then reference them in ivy.xml. This way project info is only declared once. This is especially 
 true for the project name.
 
@@ -179,9 +182,9 @@ true for the project name.
 
 Here we reuse the project name and add a new property called project.organisation.
 
-From here configuring ivy depends on what is needed for the project. A good start which may be more advanced is 
-to add build testing to the project. This will allow the build to be developed with automated tests. antunit 
-can be used to test the build but first it must be added.
+From here configuring ivy depends on what is needed for the project. A good start which may be more advanced 
+for ant is to add build testing to the project. This will allow the build to be developed with automated tests. 
+antunit can be used to test the build but first it must be added.
 
 # Adding the first build dependencies
 
@@ -204,6 +207,7 @@ configuration is the set of build dependencies. It is be added to ivy.xml.
     </configurations>
 </ivy-module>
 ```
+## build dependencies
 
 Now that we have a configuration a dependency can be added. Here is the full file.
 
@@ -220,7 +224,107 @@ Now that we have a configuration a dependency can be added. Here is the full fil
 </ivy-module>
 ```
 
+The `build` configuration will contain the antunit jar only.
+
+## build initialisation
+
+Initialising the build involves adding tasks and types to ant for all dependencies in the build configuration.
+Every ant lib added to the build configuration needs to loaded with a `taskdef` task. To do this a classpath
+is generated using ivy and `taskdef`s are added for each antlib. Here is the code:
+
+```
+<target name="init-build" depends="init-ivy">
+    <ivy:cachepath pathid="build.classpath" conf="build"/>
+    <taskdef resource="org/apache/ant/antunit/antlib.xml" uri="antlib:org.apache.ant.antunit"
+        classpathref="build.classpath"/>
+</target>
+```
+
 # testing the build
 
+## running tests
+
 Gradle has support out of the box to test tasks and plugins for a project. The same can be done with 
-antunit.
+antunit. This is the task:
+
+```
+<target name="test-build" depends="init-build">
+    <mkdir dir="${reports.antunit.dir}"/>
+    <au:antunit>
+        <fileset dir="${src.antunit.ant.dir}"/>
+        <au:plainlistener/>
+        <au:xmllistener todir="${reports.antunit.dir}"/>
+    </au:antunit>
+    <junitreport todir="${reports.antunit.dir}">
+        <fileset dir="${reports.antunit.dir}">
+            <include name="TEST-*.xml"/>
+        </fileset>
+        <report format="frames" todir="${reports.antunit.dir}/html"/>
+    </junitreport>
+</target>
+```
+
+The task will execute all tests in src.antunit.ant.dir. The tests are located in `src/antunit/ant`. This is to 
+follow the standard maven project layout gradle follows. Output of the tests is generated in the console as 
+well as an junit xml and junit html.
+
+## making tests
+
+Testing a build.xml can be tricky. The tests should not use the normal build directory but the test reports 
+should go to the normal build directory. It is a good thing properties are imutable. A base xml file can be
+used to set project properties correctly before the project is included.
+
+```
+<project basedir="../../../" xmlns:au="antlib:org.apache.ant.antunit">
+
+    <property name="build.dir" location="build/test-build"/>
+    <property name="build.cache" location="build/test-build-cache"/>
+    <property name="reports.ant.unit.dir" location="build/reports/antunit"/>
+    <include file="../../../build.xml" as="project"/>
+</project>
+```
+
+Using an include allows all targets to be prefixed with `project.`. This ensures antunit only executes antunit 
+tests rather than project test targets. This base build file can be imported by other tests. Every property 
+in the main project is available in tests. For example:
+
+```
+<project basedir="../../../" xmlns:au="antlib:org.apache.ant.antunit">
+
+    <import file="project-base.xml"/>
+
+    <target name="test-project-name">
+        <au:assertPropertyEquals name="ant.project.name" value="gradle-to-ant"/>
+    </target>
+</project>
+```
+
+This tests the project name that is dynamically set to the project directory.
+
+All project tasks are available in tests prefixed with `project`. For example:
+
+```
+<project basedir="../../../" xmlns:au="antlib:org.apache.ant.antunit">
+
+    <import file="project-base.xml"/>
+
+    <target name="setUp" depends="project.clean-build-cache, project.install-ivy"/>
+
+    <target name="tearDown" depends="project.clean-build-cache"/>
+
+    <target name="test-install-ivy-clean">
+        <au:assertFileExists file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+        <au:assertLogDoesntContain level="warning"
+            text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+    </target>
+
+    <target name="test-install-ivy-cached">
+        <ant target="project.install-ivy" antfile="${ant.file}" inheritRefs="true"/>
+        <au:assertLogContains level="warning"
+            text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+    </target>
+</project>
+```
+
+These tests execute the project targets and check the resulting files. The log is also checked for output 
+indicating the cache was used.

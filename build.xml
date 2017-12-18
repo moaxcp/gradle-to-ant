@@ -66,17 +66,18 @@
             classpathref="build.classpath"/>
     </target>
 
-    <target name="init" depends="init-build">
-        <mkdir dir="${build.dir}"/>
-        <mkdir dir="${reports.dir}"/>
-    </target>
-
-    <target name="test-build" depends="init">
+    <target name="test-build" depends="init-build">
         <mkdir dir="${reports.antunit.dir}"/>
         <au:antunit>
             <fileset dir="${src.antunit.ant.dir}"/>
             <au:plainlistener/>
             <au:xmllistener todir="${reports.antunit.dir}"/>
         </au:antunit>
+        <junitreport todir="${reports.antunit.dir}">
+            <fileset dir="${reports.antunit.dir}">
+                <include name="TEST-*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports.antunit.dir}/html"/>
+        </junitreport>
     </target>
 </project>

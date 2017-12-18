@@ -7,7 +7,6 @@
     </target>
 
     <target name="test-project-name">
-        <echo>project name is ${ant.project.name}</echo>
         <au:assertPropertyEquals name="ant.project.name" value="gradle-to-ant"/>
     </target>
 
