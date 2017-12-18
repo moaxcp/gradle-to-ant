@@ -13,33 +13,37 @@
     <property name="ivy.settings.file" location="ivysettings.xml"/>
 
     <property name="build.dir" location="build"/>
-    <property name="download.dir" location="download"/>
-    <property name="ivy.dir" location="${download.dir}/ivy"/>
+    <property name="build.cache" location="build-cache"/>
+    <property name="cache.download.dir" location="${build.cache}/download"/>
     <property name="reports.dir" location="${build.dir}/reports"/>
     <property name="reports.antunit.dir" location="${reports.dir}/antunit"/>
+
+    <property name="src.dir" location="src"/>
+    <property name="src.antunit.dir" location="${src.dir}/antunit"/>
+    <property name="src.antunit.ant.dir" location="${src.antunit.dir}/ant"/>
+
+    <target name="clean-all" depends="clean, clean-caches"/>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
     </target>
 
-    <target name="clean-downloads">
-        <delete dir="download.dir"/>
+    <target name="clean-caches" depends="clean-ivy-cache, clean-build-cache"/>
+
+    <target name="clean-build-cache">
+        <delete dir="${build.cache}"/>
     </target>
 
     <target name="clean-ivy-cache" depends="install-ivy">
         <ivy:cleancache/>
     </target>
 
-    <target name="init-directories">
-        <mkdir dir="${build.dir}"/>
-        <mkdir dir="${reports.dir}"/>
-        <mkdir dir="${reports.antunit.dir}"/>
-    </target>
-
-    <target name="install-ivy" depends="init-directories">
+    <target name="install-ivy">
+        <local name="ivy.dir"/>
         <local name="ivy.file"/>
         <local name="ivy.available"/>
 
+        <property name="ivy.dir" location="${cache.download.dir}/ivy"/>
         <property name="ivy.file" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
         <available file="${ivy.file}" property="ivy.present"/>
 
@@ -62,11 +66,15 @@
             classpathref="build.classpath"/>
     </target>
 
-    <target name="init" depends="init-ivy, init-build"/>
+    <target name="init" depends="init-build">
+        <mkdir dir="${build.dir}"/>
+        <mkdir dir="${reports.dir}"/>
+    </target>
 
-    <target name="test-build" depends="init-build">
+    <target name="test-build" depends="init">
+        <mkdir dir="${reports.antunit.dir}"/>
         <au:antunit>
-            <fileset file="test.xml"/>
+            <fileset dir="${src.antunit.ant.dir}"/>
             <au:plainlistener/>
             <au:xmllistener todir="${reports.antunit.dir}"/>
         </au:antunit>

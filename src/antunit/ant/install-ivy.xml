@@ -1,0 +1,20 @@
+<project basedir="../../../" xmlns:au="antlib:org.apache.ant.antunit">
+
+    <import file="project-base.xml"/>
+
+    <target name="setUp" depends="project.clean-build-cache, project.install-ivy"/>
+
+    <target name="tearDown" depends="project.clean-build-cache"/>
+
+    <target name="test-install-ivy-clean">
+        <au:assertFileExists file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+        <au:assertLogDoesntContain level="warning"
+            text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+    </target>
+
+    <target name="test-install-ivy-cached">
+        <ant target="project.install-ivy" antfile="${ant.file}" inheritRefs="true"/>
+        <au:assertLogContains level="warning"
+            text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+    </target>
+</project>
