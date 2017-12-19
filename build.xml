@@ -24,9 +24,12 @@
     <property name="src.antunit.dir" location="${src.dir}/antunit"/>
     <property name="src.antunit.ant.dir" location="${src.antunit.dir}/ant"/>
 
+    <extension-point name="clean"/>
+    <extension-point name="test"/>
+
     <target name="clean-all" depends="clean, clean-caches"/>
 
-    <target name="clean">
+    <target name="clean-build" extensionOf="clean">
         <delete dir="${build.dir}"/>
     </target>
 
@@ -69,7 +72,7 @@
             classpathref="build.classpath"/>
     </target>
 
-    <target name="test-short-build" depends="init-build">
+    <target name="test-short-build" depends="init-build" extensionOf="test">
         <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
             <fileset dir="${src.antunit.ant.dir}">
@@ -78,16 +81,17 @@
             <au:plainlistener/>
             <au:xmllistener todir="${build.test.results.dir}"/>
         </au:antunit>
+        <delete dir="${reports.antunit.dir}"/>
         <mkdir dir="${reports.antunit.dir}"/>
-        <junitreport todir="${build.test.results.dir}" tofile="TESTS-short-TestSuites.xml">
+        <junitreport todir="${build.test.results.dir}">
             <fileset dir="${build.test.results.dir}">
-                <include name="**/*test-short*.xml"/>
+                <include name="TEST-*.xml"/>
             </fileset>
             <report format="frames" todir="${reports.antunit.dir}/html"/>
         </junitreport>
     </target>
 
-    <target name="test-long-build" depends="init-build">
+    <target name="test-long-build" depends="init-build" extensionOf="test">
         <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
             <fileset dir="${src.antunit.ant.dir}">
@@ -96,23 +100,13 @@
             <au:plainlistener/> 
             <au:xmllistener todir="${build.test.results.dir}"/>
         </au:antunit>
+        <delete dir="${reports.antunit.dir}"/>
         <mkdir dir="${reports.antunit.dir}"/>
-        <junitreport todir="${build.test.results.dir}" tofile="TESTS-long-TestSuites.xml">
+        <junitreport todir="${build.test.results.dir}">
             <fileset dir="${build.test.results.dir}">
-                <include name="**/*test-long*.xml"/>
-            </fileset>
-            <report format="frames" todir="${reports.antunit.dir}/html"/>
-        </junitreport>
-    </target>
-
-    <target name="test-build" depends="test-short-build, test-long-build">
-        <junitreport todir="${build.test.results.dir}" tofile="TESTS-all-TestSuites.xml">
-            <fileset dir="${reports.antunit.dir}">
                 <include name="TEST-*.xml"/>
             </fileset>
             <report format="frames" todir="${reports.antunit.dir}/html"/>
         </junitreport>
     </target>
-
-    <target name="test" depends="test-short-build"/>
 </project>
