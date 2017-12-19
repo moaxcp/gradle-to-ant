@@ -26,7 +26,7 @@
         <au:assertPropertyEquals name="build.dir" value="${basedir}/build/test-build"/>
     </target>
 
-    <target name="test-short-property-build-cache">
+    <target name="test-property-build-cache">
         <au:assertPropertyEquals name="build.cache" value="${basedir}/build/test-build-cache"/>
     </target>
 

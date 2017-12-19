@@ -6,7 +6,7 @@
 
     <target name="tearDown" depends="project.clean-build-cache"/>
 
-    <target name="test-install-ivy-clean">
+    <target name="test-long-install-ivy-clean">
         <au:assertFileDoesntExist file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
         <ant target="project.install-ivy" antfile="${ant.file}" inheritRefs="true"/>
         <au:assertFileExists file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
@@ -14,7 +14,7 @@
             text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
     </target>
 
-    <target name="test-install-ivy-cached">
+    <target name="test-long-install-ivy-cached">
         <au:assertFileDoesntExist file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
         <ant target="project.install-ivy" antfile="${ant.file}" inheritRefs="true"/>
         <au:assertFileExists file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>

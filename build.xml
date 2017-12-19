@@ -15,6 +15,8 @@
     <property name="build.dir" location="build"/>
     <property name="build.cache" location="build-cache"/>
     <property name="cache.download.dir" location="${build.cache}/download"/>
+
+    <property name="build.test.results.dir" location="${build.dir}/test-results"/>
     <property name="reports.dir" location="${build.dir}/reports"/>
     <property name="reports.antunit.dir" location="${reports.dir}/antunit"/>
 
@@ -51,7 +53,8 @@
 
         <mkdir unless:set="ivy.present" dir="${ivy.dir}"/>
         <get unless:set="ivy.present" dest="${ivy.file}" 
-            src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
+            src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"
+            verbose="true"/>
 
         <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.file}"/>
     </target>
@@ -66,18 +69,50 @@
             classpathref="build.classpath"/>
     </target>
 
-    <target name="test-build" depends="init-build">
-        <mkdir dir="${reports.antunit.dir}"/>
+    <target name="test-short-build" depends="init-build">
+        <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
-            <fileset dir="${src.antunit.ant.dir}"/>
+            <fileset dir="${src.antunit.ant.dir}">
+                <include name="**/test-short*.xml"/>
+            </fileset>
             <au:plainlistener/>
-            <au:xmllistener todir="${reports.antunit.dir}"/>
+            <au:xmllistener todir="${build.test.results.dir}"/>
         </au:antunit>
-        <junitreport todir="${reports.antunit.dir}">
+        <mkdir dir="${reports.antunit.dir}"/>
+        <junitreport todir="${build.test.results.dir}" tofile="TESTS-short-TestSuites.xml">
+            <fileset dir="${build.test.results.dir}">
+                <include name="**/*test-short*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports.antunit.dir}/html"/>
+        </junitreport>
+    </target>
+
+    <target name="test-long-build" depends="init-build">
+        <mkdir dir="${build.test.results.dir}"/>
+        <au:antunit>
+            <fileset dir="${src.antunit.ant.dir}">
+                <include name="**/test-long*.xml"/>
+            </fileset>
+            <au:plainlistener/> 
+            <au:xmllistener todir="${build.test.results.dir}"/>
+        </au:antunit>
+        <mkdir dir="${reports.antunit.dir}"/>
+        <junitreport todir="${build.test.results.dir}" tofile="TESTS-long-TestSuites.xml">
+            <fileset dir="${build.test.results.dir}">
+                <include name="**/*test-long*.xml"/>
+            </fileset>
+            <report format="frames" todir="${reports.antunit.dir}/html"/>
+        </junitreport>
+    </target>
+
+    <target name="test-build" depends="test-short-build, test-long-build">
+        <junitreport todir="${build.test.results.dir}" tofile="TESTS-all-TestSuites.xml">
             <fileset dir="${reports.antunit.dir}">
                 <include name="TEST-*.xml"/>
             </fileset>
             <report format="frames" todir="${reports.antunit.dir}/html"/>
         </junitreport>
     </target>
+
+    <target name="test" depends="test-short-build"/>
 </project>
