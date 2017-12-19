@@ -25,15 +25,15 @@
     <property name="src.antunit.ant.dir" location="${src.antunit.dir}/ant"/>
 
     <extension-point name="clean"/>
+    <extension-point name="clean-all" depends="clean, clean-caches"/>
+    <extension-point name="clean-caches" depends="clean-ivy-cache, clean-build-cache"/>
+    <extension-point name="configure"/>
+    <extension-point name="compile"/>
     <extension-point name="test"/>
-
-    <target name="clean-all" depends="clean, clean-caches"/>
 
     <target name="clean-build" extensionOf="clean">
         <delete dir="${build.dir}"/>
     </target>
-
-    <target name="clean-caches" depends="clean-ivy-cache, clean-build-cache"/>
 
     <target name="clean-build-cache">
         <delete dir="${build.cache}"/>
@@ -56,23 +56,22 @@
 
         <mkdir unless:set="ivy.present" dir="${ivy.dir}"/>
         <get unless:set="ivy.present" dest="${ivy.file}" 
-            src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"
-            verbose="true"/>
+            src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
 
         <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.file}"/>
     </target>
 
-    <target name="init-ivy" depends="install-ivy">
+    <target name="configure-ivy" depends="install-ivy">
         <ivy:resolve/>
     </target>
 
-    <target name="init-build" depends="init-ivy">
+    <target name="configure-build" depends="configure-ivy" extensionOf="configure">
         <ivy:cachepath pathid="build.classpath" conf="build"/>
         <taskdef resource="org/apache/ant/antunit/antlib.xml" uri="antlib:org.apache.ant.antunit" 
             classpathref="build.classpath"/>
     </target>
 
-    <target name="test-short-build" depends="init-build" extensionOf="test">
+    <target name="test-short-build" depends="configure-build" extensionOf="test">
         <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
             <fileset dir="${src.antunit.ant.dir}">
@@ -91,7 +90,7 @@
         </junitreport>
     </target>
 
-    <target name="test-long-build" unless="test.skip.long" depends="init-build" extensionOf="test">
+    <target name="test-long-build" unless="test.skip.long" depends="configure-build" extensionOf="test">
         <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
             <fileset dir="${src.antunit.ant.dir}">
