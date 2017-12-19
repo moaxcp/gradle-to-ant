@@ -2,17 +2,24 @@
 
     <import file="project-base.xml"/>
 
-    <target name="setUp" depends="project.clean-build-cache, project.install-ivy"/>
+    <target name="setUp" depends="project.clean-build-cache"/>
 
     <target name="tearDown" depends="project.clean-build-cache"/>
 
     <target name="test-install-ivy-clean">
+        <au:assertFileDoesntExist file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+        <ant target="project.install-ivy" antfile="${ant.file}" inheritRefs="true"/>
         <au:assertFileExists file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
         <au:assertLogDoesntContain level="warning"
             text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
     </target>
 
     <target name="test-install-ivy-cached">
+        <au:assertFileDoesntExist file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+        <ant target="project.install-ivy" antfile="${ant.file}" inheritRefs="true"/>
+        <au:assertFileExists file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+        <au:assertLogDoesntContain level="warning" 
+            text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
         <ant target="project.install-ivy" antfile="${ant.file}" inheritRefs="true"/>
         <au:assertLogContains level="warning"
             text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
