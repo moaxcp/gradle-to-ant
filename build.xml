@@ -91,7 +91,7 @@
         </junitreport>
     </target>
 
-    <target name="test-long-build" depends="init-build" extensionOf="test">
+    <target name="test-long-build" unless="test.skip.long" depends="init-build" extensionOf="test">
         <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
             <fileset dir="${src.antunit.ant.dir}">
