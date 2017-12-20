@@ -2,27 +2,19 @@
 
     <import file="project-base.xml"/>
 
-    <target name="test-short-project-organisation">
-        <au:assertPropertyEquals name="project.organisation" value="com.github.moaxcp"/>
-    </target>
-
-    <target name="test-short-project-name">
+    <target name="test-project-name">
         <au:assertPropertyEquals name="ant.project.name" value="gradle-to-ant"/>
     </target>
 
-    <target name="test-short-project-version">
-        <au:assertPropertyEquals name="project.version" value="0.0.0"/>
-    </target>
-
-    <target name="test-short-ivy-version">
+    <target name="test-ivy-version">
         <au:assertPropertyEquals name="ivy.version" value="2.4.0"/>
     </target>
 
-    <target name="test-short-ivy-settings-file">
+    <target name="test-ivy-settings-file">
         <au:assertPropertyEquals name="ivy.settings.file" value="${basedir}/ivysettings.xml"/>
     </target>
 
-    <target name="test-short-property-build-dir">
+    <target name="test-property-build-dir">
         <au:assertPropertyEquals name="build.dir" value="${basedir}/build/test-build"/>
     </target>
 
@@ -30,27 +22,27 @@
         <au:assertPropertyEquals name="build.cache" value="${basedir}/build/test-build-cache"/>
     </target>
 
-    <target name="test-short-cache-download-dir">
-        <au:assertPropertyEquals name="cache.download.dir" value="${build.cache}/download"/>
+    <target name="test-build-cache-download-dir">
+        <au:assertPropertyEquals name="build.cache.download.dir" value="${build.cache.dir}/download"/>
     </target>
 
-    <target name="test-short-reports-dir">
+    <target name="test-reports-dir">
         <au:assertPropertyEquals name="reports.dir" value="${build.dir}/reports"/>
     </target>
 
-    <target name="test-short-property-reports-ant-unit-dir">
+    <target name="test-property-reports-ant-unit-dir">
         <au:assertPropertyEquals name="reports.ant.unit.dir" value="${basedir}/build/reports/antunit"/>
     </target>
 
-    <target name="test-short-src-dir">
+    <target name="test-src-dir">
         <au:assertPropertyEquals name="src.dir" value="${basedir}/src"/>
     </target>
 
-    <target name="test-short-src-antunit-dir"> 
+    <target name="test-src-antunit-dir"> 
         <au:assertPropertyEquals name="src.antunit.dir" value="${src.dir}/antunit"/>
     </target>
 
-    <target name="test-short-src-antunit-ant-dir">
+    <target name="test-src-antunit-ant-dir">
         <au:assertPropertyEquals name="src.antunit.ant.dir" value="${src.antunit.dir}/ant"/>
     </target>
 </project>

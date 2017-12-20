@@ -1,0 +1,75 @@
+<project xmlns:ivy="antlib:org.apache.ivy.ant"
+    xmlns:if="ant:if"
+    xmlns:unless="ant:unless">
+    <description>
+        Applies base conventions to a project.
+    </description>
+
+    <basename property="ant.project.name" file="${basedir}"/>
+
+    <property name="ivy.version" value="2.4.0"/>
+    <property name="ivy.settings.file" location="ivysettings.xml"/>
+
+    <property name="build.dir" location="build"/>
+    <property name="build.cache.dir" location="build-cache"/>
+    <property name="build.cache.download.dir" location="${build.cache.dir}/download"/>
+
+    <property name="build.test.results.dir" location="${build.dir}/test-results"/>
+    <property name="reports.dir" location="${build.dir}/reports"/>
+
+    <property name="src.dir" location="src"/>
+
+    <extension-point name="init"/>
+    <extension-point name="clean" depends="init"/>
+    <extension-point name="cleanCaches" depends="init, cleanIvyCache, cleanBuildCache"/>
+    <extension-point name="cleanAll" depends="clean, cleanCaches"/>
+    <extension-point name="configure" depends="init, configureBuild"/>
+    <extension-point name="test" depends="configure"/>
+    <extension-point name="check" depends="test"/>
+    <extension-point name="assemble"/>
+    <extension-point name="build" depends="check, assemble"/>
+
+    <target name="cleanBuild" extensionOf="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="cleanBuildCache">
+        <delete dir="${build.cache.dir}"/>
+    </target>
+
+    <target name="cleanIvyCache" depends="installIvy">
+        <ivy:cleancache/>
+    </target>
+
+    <target name="initInstallIvy">
+        <available file="ivy.xml" property="run.installIvy"/>
+    </target>
+
+    <target name="installIvy">
+        <local name="ivy.dir"/>
+        <local name="ivy.file"/>
+        <local name="ivy.available"/>
+
+        <property name="ivy.dir" location="${build.cache.download.dir}/ivy"/>
+        <property name="ivy.file" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
+        <available file="${ivy.file}" property="ivy.present"/>
+
+        <echo if:set="ivy.present">ivy installed at ${ivy.file}</echo>
+
+        <mkdir unless:set="ivy.present" dir="${ivy.dir}"/>
+        <get unless:set="ivy.present" dest="${ivy.file}" 
+            src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
+
+        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.file}"/>
+    </target>
+
+    <target name="initConfigureBuild" extensionOf="init">
+        <available file="ivy.xml" property="run.configureBuild"/>
+    </target>
+
+    <target name="configureBuild" depends="initConfigureBuild, installIvy" if="run.configureBuild" 
+        unless="skip.configureBuild">
+        <ivy:resolve/>
+        <ivy:cachepath pathid="build.classpath" conf="build"/>
+    </target>
+</project>
