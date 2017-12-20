@@ -19,15 +19,24 @@
 
     <property name="src.dir" location="src"/>
 
-    <extension-point name="init"/>
-    <extension-point name="clean" depends="init"/>
-    <extension-point name="cleanCaches" depends="init, cleanIvyCache, cleanBuildCache"/>
-    <extension-point name="cleanAll" depends="clean, cleanCaches"/>
-    <extension-point name="configure" depends="init, configureBuild"/>
-    <extension-point name="test" depends="configure"/>
-    <extension-point name="check" depends="test"/>
-    <extension-point name="assemble"/>
-    <extension-point name="build" depends="check, assemble"/>
+    <extension-point name="init" 
+        description="Initializes build by setting properties for targets. Targets can extend 'init' to setup execution of optional targets."/>
+    <extension-point name="clean" depends="init" 
+        description="Cleans build."/>
+    <extension-point name="cleanCaches" depends="init, cleanIvyCache, cleanBuildCache"
+        description="Cleans all caches."/>
+    <extension-point name="cleanAll" depends="clean, cleanCaches" 
+        description="Cleans everything"/>
+    <extension-point name="configure" depends="init, configureBuild" 
+        description="Configures targets."/>
+    <extension-point name="test" depends="configure" 
+        description="Executes all tests. Targets can extend 'test' to add tests."/>
+    <extension-point name="check" depends="test"
+        description="Executes all checks. Targets can extend 'check' to add checks."/>
+    <extension-point name="assemble"
+        description="Assembles all packages."/>
+    <extension-point name="build" depends="check, assemble"
+        description="Builds everything"/>
 
     <target name="cleanBuild" extensionOf="clean">
         <delete dir="${build.dir}"/>
