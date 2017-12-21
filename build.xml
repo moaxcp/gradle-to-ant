@@ -10,6 +10,7 @@
     <import file="src/main/ant/base.xml"/>
 
     <property name="antunit.build.base" location="${src.dir}/main/ant/base.xml"/>
+    <property name="antunit.build.java" location="${src.dir}/main/ant/java.xml"/>
 
     <import file="src/main/ant/base.xml"/>
     <import file="src/main/ant/antunit.xml"/>

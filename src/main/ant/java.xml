@@ -4,112 +4,21 @@
     xmlns:au="antlib:org.apache.ant.antunit">
 
     <description>
-        Example project applying gradle conventions to ant.
+        Java base project applying gradle conventions to ant.
     </description>
-    <property name="project.organisation" value="com.github.moaxcp"/>
-    <basename property="ant.project.name" file="${basedir}"/>
-    <property name="project.version" value="0.0.0"/>
-    <property name="ivy.version" value="2.4.0"/>
-    <property name="ivy.settings.file" location="ivysettings.xml"/>
 
-    <property name="build.dir" location="build"/>
-    <property name="build.cache" location="build-cache"/>
-    <property name="cache.download.dir" location="${build.cache}/download"/>
+    <property name="src.main.dir" location="${src.dir}/main"/>
+    <property name="src.main.java.dir" location="${src.antunit.dir}/java"/>
 
-    <property name="build.test.results.dir" location="${build.dir}/test-results"/>
-    <property name="reports.dir" location="${build.dir}/reports"/>
-    <property name="reports.antunit.dir" location="${reports.dir}/antunit"/>
-
-    <property name="src.dir" location="src"/>
-    <property name="src.antunit.dir" location="${src.dir}/antunit"/>
-    <property name="src.antunit.ant.dir" location="${src.antunit.dir}/ant"/>
-
-    <extension-point name="clean"/>
-    <extension-point name="clean-all" depends="clean, clean-caches"/>
-    <extension-point name="clean-caches" depends="clean-ivy-cache, clean-build-cache"/>
-    <extension-point name="configure"/>
     <extension-point name="compile" depends="configure"/>
-    <extension-point name="test" depends="compile"/>
 
-    <target name="clean-build" extensionOf="clean">
-        <delete dir="${build.dir}"/>
+    <bindtargets targets="compile" extensionPoint="test"/>
+
+    <target name="initCompileJava" extensionOf="init">
+        <available dir="${src.java.dir}" property="run.compileJava"/>
     </target>
 
-    <target name="clean-build-cache">
-        <delete dir="${build.cache}"/>
-    </target>
+    <target name="compileJava" extensionOf="compile" if="run.compileJava" unless="skip.compileJava">
 
-    <target name="clean-ivy-cache" depends="install-ivy">
-        <ivy:cleancache/>
-    </target>
-
-    <target name="install-ivy">
-        <local name="ivy.dir"/>
-        <local name="ivy.file"/>
-        <local name="ivy.available"/>
-
-        <property name="ivy.dir" location="${cache.download.dir}/ivy"/>
-        <property name="ivy.file" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
-        <available file="${ivy.file}" property="ivy.present"/>
-
-        <echo if:set="ivy.present">ivy installed at ${ivy.file}</echo>
-
-        <mkdir unless:set="ivy.present" dir="${ivy.dir}"/>
-        <get unless:set="ivy.present" dest="${ivy.file}" 
-            src="http://repo1.maven.org/maven2/org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.jar"/>
-
-        <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.file}"/>
-    </target>
-
-    <target name="configure-ivy" depends="install-ivy">
-        <ivy:resolve/>
-    </target>
-
-    <target name="configure-build" depends="configure-ivy" extensionOf="configure">
-        <ivy:cachepath pathid="build.classpath" conf="build"/>
-        <taskdef resource="org/apache/ant/antunit/antlib.xml" uri="antlib:org.apache.ant.antunit" 
-            classpathref="build.classpath"/>
-    </target>
-
-    <target name="configure-dir-tasks" extensionOf="configure">
-        
-    </targets>
-
-    <target name="test-short-build" depends="configure-build" extensionOf="test">
-        <mkdir dir="${build.test.results.dir}"/>
-        <au:antunit>
-            <fileset dir="${src.antunit.ant.dir}">
-                <include name="**/test-short*.xml"/>
-            </fileset>
-            <au:plainlistener/>
-            <au:xmllistener todir="${build.test.results.dir}"/>
-        </au:antunit>
-        <delete dir="${reports.antunit.dir}"/>
-        <mkdir dir="${reports.antunit.dir}"/>
-        <junitreport todir="${build.test.results.dir}">
-            <fileset dir="${build.test.results.dir}">
-                <include name="TEST-*.xml"/>
-            </fileset>
-            <report format="frames" todir="${reports.antunit.dir}/html"/>
-        </junitreport>
-    </target>
-
-    <target name="test-long-build" unless="test.skip.long" depends="configure-build" extensionOf="test">
-        <mkdir dir="${build.test.results.dir}"/>
-        <au:antunit>
-            <fileset dir="${src.antunit.ant.dir}">
-                <include name="**/test-long*.xml"/>
-            </fileset>
-            <au:plainlistener/> 
-            <au:xmllistener todir="${build.test.results.dir}"/>
-        </au:antunit>
-        <delete dir="${reports.antunit.dir}"/>
-        <mkdir dir="${reports.antunit.dir}"/>
-        <junitreport todir="${build.test.results.dir}">
-            <fileset dir="${build.test.results.dir}">
-                <include name="TEST-*.xml"/>
-            </fileset>
-            <report format="frames" todir="${reports.antunit.dir}/html"/>
-        </junitreport>
     </target>
 </project>

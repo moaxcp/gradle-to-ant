@@ -1,0 +1,40 @@
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+    <import file="project-base.xml"/>
+
+    <target name="test-project-name">
+        <au:assertPropertyEquals name="ant.project.name" value="java-project"/>
+    </target>
+
+    <target name="test-ivy-version">
+        <au:assertPropertyEquals name="ivy.version" value="2.4.0"/>
+    </target>
+
+    <target name="test-ivy-settings-file">
+        <au:assertPropertyEquals name="ivy.settings.file" value="${basedir}/ivysettings.xml"/>
+    </target>
+
+    <target name="test-build-dir">
+        <au:assertPropertyEquals name="build.dir" value="${basedir}/build/test-build"/>
+    </target>
+
+    <target name="test-build-cache">
+        <au:assertPropertyEquals name="build.cache.dir" value="${basedir}/build/test-build-cache"/>
+    </target>
+
+    <target name="test-build-cache-download-dir">
+        <au:assertPropertyEquals name="build.cache.download.dir" value="${build.cache.dir}/download"/>
+    </target>
+
+    <target name="test-reports-dir">
+        <au:assertPropertyEquals name="reports.dir" value="${build.dir}/reports"/>
+    </target>
+
+    <target name="test-reports-ant-unit-dir">
+        <au:assertPropertyEquals name="reports.ant.unit.dir" value="${basedir}/build/reports/antunit"/>
+    </target>
+
+    <target name="test-src-dir">
+        <au:assertPropertyEquals name="src.dir" value="${basedir}/src"/>
+    </target>
+</project>
