@@ -1,9 +1,8 @@
-<project basedir="../../../" xmlns:au="antlib:org.apache.ant.antunit">
+<project xmlns:au="antlib:org.apache.ant.antunit">
 
-    <import file="project-base.xml"/>
+    <include file="project-base.xml" as="project"/>
 
-    <target name="setUp" depends="project.cleanBuildCache"/>
-
+    <target name="suiteSetUp" depends="project.cleanBuildCache"/>
     <target name="tearDown" depends="project.cleanBuildCache"/>
 
     <target name="test-install-ivy-clean">

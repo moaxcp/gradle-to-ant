@@ -1,0 +1,20 @@
+<project xmlns:au="antlib:org.apache.ant.antunit">
+
+    <include file="project-base.xml" as="project"/>
+
+    <target name="tearDown" depends="project.clean"/>
+
+    <target name="test-clean-no-build">
+        <au:assertFileDoesntExist file="${build.dir}"/>
+        <antcall target="project.clean"/>
+        <au:assertFileDoesntExist file="${build.dir}"/>
+    </target>
+
+    <target name="test-clean">
+        <au:assertFileDoesntExist file="${build.dir}"/>
+        <antcall target="project.build"/>
+        <au:assertFileExists file="${build.dir}"/>
+        <antcall target="project.clean"/>
+        <au:assertFileDoesntExist file="${build.dir}"/>
+    </target>
+</project>

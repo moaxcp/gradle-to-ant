@@ -36,7 +36,11 @@
     <extension-point name="assemble"
         description="Assembles all packages."/>
     <extension-point name="build" depends="check, assemble"
-        description="Builds everything"/>
+        description="Builds everything."/>
+
+    <target name="initBuild" extensionOf="init">
+        <mkdir dir="${build.dir}"/>
+    </target>
 
     <target name="cleanBuild" extensionOf="clean">
         <delete dir="${build.dir}"/>
@@ -48,10 +52,6 @@
 
     <target name="cleanIvyCache" depends="installIvy">
         <ivy:cleancache/>
-    </target>
-
-    <target name="initInstallIvy">
-        <available file="ivy.xml" property="run.installIvy"/>
     </target>
 
     <target name="installIvy">

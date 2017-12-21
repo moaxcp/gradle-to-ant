@@ -8,5 +8,9 @@
     <property name="project.version" value="0.0.0"/>
 
     <import file="src/main/ant/base.xml"/>
+
+    <property name="antunit.build.base" location="${src.dir}/main/ant/base.xml"/>
+
+    <import file="src/main/ant/base.xml"/>
     <import file="src/main/ant/antunit.xml"/>
 </project>

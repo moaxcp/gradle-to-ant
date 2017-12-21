@@ -11,19 +11,32 @@
 
     <property name="src.antunit.dir" location="${src.dir}/antunit"/>
     <property name="src.antunit.ant.dir" location="${src.antunit.dir}/ant"/>
+    <property name="build.antunit.dir" location="${build.dir}/antunit"/>
+
+    <extension-point name="prepareAntUnit"/>
 
     <target name="configureAntUnit" extensionOf="configure">
-	<echo>${toString:build.classpath}</echo>
         <taskdef resource="org/apache/ant/antunit/antlib.xml" uri="antlib:org.apache.ant.antunit"
 	    classpathref="build.classpath"/>
     </target>
 
-    <target name="testAntUnit" extensionOf="test">
+    <target name="moveToBuild" extensionOf="prepareAntUnit">
+        <copy toDir="${build.antunit.dir}">
+            <fileset dir="${src.antunit.ant.dir}"/>
+        </copy>
+    </target>
+
+    <target name="testAntUnit" depends="prepareAntUnit" extensionOf="test">
         <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
-            <fileset dir="${src.antunit.ant.dir}"/>
-            <au:plainlistener/>
+            <fileset dir="${build.antunit.dir}">
+                <include name="**/*-test.xml"/>
+            </fileset>
+            <au:plainlistener logLevel="error"/>
             <au:xmllistener todir="${build.test.results.dir}"/>
+            <propertyset>
+                <propertyref prefix="antunit"/>
+            </propertyset>
         </au:antunit>
         <delete dir="${reports.antunit.dir}"/>
         <mkdir dir="${reports.antunit.dir}"/>
