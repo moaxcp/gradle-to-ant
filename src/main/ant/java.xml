@@ -15,7 +15,7 @@
     <bindtargets targets="compile" extensionPoint="test"/>
 
     <target name="initCompileJava" extensionOf="init">
-        <available dir="${src.java.dir}" property="run.compileJava"/>
+        <available dir="${src.main.java.dir}" property="run.compileJava"/>
     </target>
 
     <target name="compileJava" extensionOf="compile" if="run.compileJava" unless="skip.compileJava">
