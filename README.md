@@ -45,6 +45,14 @@ Main targets:
 
 ## ant.xml
 
+Provides support for ant sources and unit tests.
+
+```
+ configureAntUnit    Adds antunit task to build.
+ moveAntUnitsToBuild  Copies antunits to build directory.
+ testAntUnit          Runs antunit tests.
+```
+
 # Conventions
 
 

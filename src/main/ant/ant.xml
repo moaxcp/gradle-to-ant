@@ -15,18 +15,18 @@
 
     <extension-point name="prepareAntUnit"/>
 
-    <target name="configureAntUnit" extensionOf="configure">
+    <target name="configureAntUnit" extensionOf="configure" description="Adds antunit task to build.">
         <taskdef resource="org/apache/ant/antunit/antlib.xml" uri="antlib:org.apache.ant.antunit"
 	    classpathref="build.classpath"/>
     </target>
 
-    <target name="moveToBuild" extensionOf="prepareAntUnit">
+    <target name="moveAntUnitsToBuild" extensionOf="prepareAntUnit" description="Copies antunits to build directory.">
         <copy toDir="${build.antunit.dir}">
             <fileset dir="${src.antunit.ant.dir}"/>
         </copy>
     </target>
 
-    <target name="testAntUnit" depends="prepareAntUnit" extensionOf="test">
+    <target name="testAntUnit" depends="prepareAntUnit" extensionOf="test" description="Runs antunit tests.">
         <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
             <fileset dir="${build.antunit.dir}">
