@@ -13,5 +13,5 @@
     <property name="antunit.build.java" location="${src.dir}/main/ant/java.xml"/>
 
     <import file="src/main/ant/base.xml"/>
-    <import file="src/main/ant/antunit.xml"/>
+    <import file="src/main/ant/ant.xml"/>
 </project>

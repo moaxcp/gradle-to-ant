@@ -1,13 +1,58 @@
 # gradle-to-ant
 
-This project implements gradle conventions in ant. It can be used to help learn gradle conventions or to help 
-prepare ant projects for a switch to gradle.
+This project implements gradle conventions in ant. This is done by adding 
+[extension-points](https://ant.apache.org/manual/targets.html#extension-points) which represent 
+the typical gradle build phases for the `base` and `java` plugins in gradle. There is also support for ant sources 
+and ant tests which is how this project is developed. The ant files can be 
+[imported](https://ant.apache.org/manual/Tasks/import.html) in your own ant project to implement these conventions.
 
-# project directory is project name
+# Ant files
+
+In gradle plugins are appied which provide support for typical tasks within a project. To do this in ant we use 
+[import](https://ant.apache.org/manual/Tasks/import.html).
+
+## base.xml
+
+The first import which adds gradle conventions to the build. Base can be extended by adding target to the 
+extension points: assemble, build, check, clean, cleanCaches, configure, init, and test.
+
+
+
+```
+Buildfile: gradle-to-ant/src/main/ant/base.xml
+
+        Provides base properties and targets which are useful to any build.
+
+Main targets:
+
+ assemble            Extension point for assembling packages.
+ build               Builds everything.
+ check               Extension point for all checks including tests. Extensions should add checks to the build.
+ clean               Entry point for cleaning the build. Extensions should delete directories.
+ cleanAll            Cleans everything by calling clean and cleanCaches.
+ cleanBuild          Deletes build directory.
+ cleanBuildCache     Deletes build cache.
+ cleanCaches         Entry point for cleaning all caches. Extensions should delete caches
+ cleanIvyCache       Cleans ivy cache.
+ configure           Extension point for configuring the build and future targets. Extntensions should create properties, condition properties, and add third party tasks.
+ configureBuild      Resolves build configuration and creates build classpath.
+ init                Entry point for initializing the build. Extensions should create directories, set properties for targets, and create condition properties for running configure targets.
+ initBuild           Creates build directory.
+ initConfigureBuild  Sets run.configureBuild if ivy.xml is present.
+ installIvy          Adds ivy jar to build cache and adds ivy tasks to project.
+ test                Extension point for running tests. Should execute all tests. Extensions should run specific types of tests.
+```
+
+## ant.xml
+
+# Conventions
+
+
+## project directory is project name
 
 In gradle the project name defaults to the directory of the project. This can be changed in settings.gradle
 but it is a good convention to follow in ant. The project name in ant can be set dynamically by removing it 
-from the project element and defining the `ant.project.name` property.
+from the project element and defining the `ant.project.name` property. In base.xml:
 
 ```
 <project name="gradle-to-ant">
@@ -23,109 +68,60 @@ Is changed to:
 </project>
 ```
 
-# build directory contains everything built
+## build directory contains everything built
 
-In gradle everything built goes into the build directory. A build directory can be implemented in ant.
+In gradle everything built goes into the build directory. base.xml provides a build directory for ant projects. 
+This makes cleaning the build very easy.
 
-First we add the build directory location. It is important to use a property location rather than a property 
-value. One code smell in ant is to use a property value rather than location to set a property. Using a location 
-sets the property to the absolute path on the filesystem.
+## build cache
 
-```
-<property name="build.dir" location="build"/>
-```
+base.xml uses a build cache to cache downloads and possibly other files needed to last beyond a clean. 
+Currently the build cache is used to store the ivy download. It can also be used by extensions during the init 
+and configure phases of the build.
 
-Next we need to add tasks to initialize the build directory.
+## clean deletes everything built
 
-```
-<target name="init">
-    <mkdir dir="${build.dir}"/>
-</target>
-```
+Simply delete the build directory. This does not delete the build cache.
 
-# clean deletes everything built
+## dependency management with ivy
 
-Simply delete build.dir.
+Gradle uses ivy concepts for dependency management. Ivy is a dependency management system for ant. 
+base.xml adds ivy support out of the box.
 
-```
-<target name="clean">
-    <delete dir="${build.dir}"/>
-</target>
-```
+## build dependencies
 
-# dependency management made easy with ivy
+Gradle is able to add new tasks and plugins at runtime. base.xml will resolve and cache the build configuration 
+using ivy. Implementing projects can extend the configure phase to add tasks downloaded by the build 
+configuration. This is done in ant.xml.
 
-Gradle uses ivy concepts for dependency management. It is also a really good system for ant. In order to use
-ivy in ant it needs to be installed. There are two static locations ivy can be installed for use in ant.
-The first is ANT_HOME/lib where ANT_HOME is the ant install directory. The second is $HOME/.ant/lib. This
-is useful when files cannot be added to ANT_HOME.
+## testing the build
 
-The problem with installing ivy with these methods is all projects need to use the same version of ivy or
+Gradle provides classes which can be used in buildSrc tests that test an actual build. This is the reason for 
+ant.xml. It provides antunit tasks which can be used to test an ant build.
+
+# ivy
+
+Gradle projects have methods to configure repositories, configurations, and dependencies. While ivy has these
+concepts the configuration has less conventions than gradle.
+
+## Why ivy is installed in base.xml
+
+In order to use ivy in ant it needs to be installed. base.xml will handle installing ivy from maven central so 
+it doesn't need to be installed in ant manually.
+
+There are two static locations ivy can be installed for use in ant. The first is ANT_HOME/lib where ANT_HOME is 
+the ant install directory. The second is $HOME/.ant/lib. This is useful when files cannot be added to ANT_HOME 
+which is the case for many linux installs.
+
+The problem with installing ivy using these methods is all projects need to use the same version of ivy or
 risk classpath issues. Dynamically loading ivy to a project location allows every project to use a different
 version of ivy.
 
-Now that there is a build directory we can dynamically install ivy to the build directory at runtime.
+With a build cache base.xml downloads a version of ivy for the project and installs it at runtime. Ivy will 
+only be downloaded once unless the build cache is cleaned.
 
-## installing ivy at runtime
-
-First we want to set a property for the version of ivy to use.
-
-```
-<property name="ivy.version" value="2.4.0"/>
-```
-
-This is a convienece property that will make it easy to update the version of ivy used.
-
-Next the `unless` and `if` xml namespace needs to be added to the project to build the task for installing ivy. 
-This will make more sense once the task is introduced.
-
-```
-<project xmlns:unless="ant:unless" xmlns:if="ant:if">
-```
-
-Now the install-ivy task is ready to be made. First we need to setup a few local properties.
-
-```
-<local name="ivy.dir"/>
-<local name="ivy.file"/>
-<local name="ivy.available"/>
-
-<property name="ivy.dir" location="${build.dir}/ivy"/>
-<property name="ivy.file" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
-<available file="${ivy.file}" property="ivy.present"/>
-```
-
-Ivy will be installed into build/ivy so it can be cleaned. The jar also has the version which makes updating 
-the ivy version easier. `ivy.present` will be set if the ivy jar is present in build/ivy. This property allows the 
-target to skip downloading the file when possible. Here is the complete target:
-
-```
-<target name="install-ivy" depends="init">
-    <local name="ivy.dir"/>
-    <local name="ivy.file"/>
-    <local name="ivy.available"/>
-
-    <property name="ivy.dir" location="${build.dir}/ivy"/>
-    <property name="ivy.file" location="${ivy.dir}/ivy-${ivy.version}.jar"/>
-    <available file="${ivy.file}" property="ivy.present"/>
-
-    <echo if:set="ivy.present">ivy installed at ${ivy.file}</echo>
-
-    <mkdir unless:set="ivy.present" dir="${ivy.dir}"/>
-    <get unless:set="ivy.present" dest="${ivy.file}"
-            src="http://search.maven.org/remotecontent?filepath=org/apache/ivy/ivy/${ivy.version}/ivy-${ivy.version}.j$
-
-    <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.file}"/>
-</target>
-```
-
-ivy.dir is created and the file is downloaded unless ivy.file is available. taskdef is used to load the ant 
-tasks from the jar.
-
-## using ivy for dependency management
-
-Gradle projects have methods to configure repositories, configurations, and dependencies. While ivy has these 
-concepts the configuration has less conventions than gradle.
+The ivy version installed is 2.4.0 but any version may be installed by setting the ivy.version property before 
+importing base.xml.
 
 ## ivysettings.xml
 
@@ -186,14 +182,14 @@ From here configuring ivy depends on what is needed for the project. A good star
 for ant is to add build testing to the project. This will allow the build to be developed with automated tests. 
 antunit can be used to test the build but first it must be added.
 
-# Adding the first build dependencies
+### Adding the first build dependencies
 
 Gradle has a concept of plugins. This allows developers to add new features to gradle such as support for 
 languages, publishing artifacts, and generating reports. An antlib has the same function. They add new types 
 and tasks to ant. Ivy is an example of an antlib. It add dependency management support to ant. Now that ivy is 
 loaded into the project it can be used to manage dependencies for bringing in other ant libraries.
 
-## build configuration
+#### build configuration
 
 Like gradle configurations, ivy configurations are sets of dependencies used for a specific purpose. The build 
 configuration is the set of build dependencies. It is be added to ivy.xml.
@@ -207,7 +203,7 @@ configuration is the set of build dependencies. It is be added to ivy.xml.
     </configurations>
 </ivy-module>
 ```
-## build dependencies
+#### build dependencies
 
 Now that we have a configuration a dependency can be added. Here is the full file.
 
@@ -233,54 +229,38 @@ Every ant lib added to the build configuration needs to loaded with a `taskdef` 
 is generated using ivy and `taskdef`s are added for each antlib. Here is the code:
 
 ```
-<target name="init-build" depends="init-ivy">
-    <ivy:cachepath pathid="build.classpath" conf="build"/>
+<target name="configureAntUnit" extensionOf="configure">
     <taskdef resource="org/apache/ant/antunit/antlib.xml" uri="antlib:org.apache.ant.antunit"
         classpathref="build.classpath"/>
 </target>
 ```
 
-# testing the build
+# testing the build with ant.xml
 
 ## running tests
 
 Gradle has support out of the box to test tasks and plugins for a project. The same can be done with 
-antunit. This is the task:
+antunit using ant.xml.
 
-```
-<target name="test-build" depends="init-build">
-    <mkdir dir="${reports.antunit.dir}"/>
-    <au:antunit>
-        <fileset dir="${src.antunit.ant.dir}"/>
-        <au:plainlistener/>
-        <au:xmllistener todir="${reports.antunit.dir}"/>
-    </au:antunit>
-    <junitreport todir="${reports.antunit.dir}">
-        <fileset dir="${reports.antunit.dir}">
-            <include name="TEST-*.xml"/>
-        </fileset>
-        <report format="frames" todir="${reports.antunit.dir}/html"/>
-    </junitreport>
-</target>
-```
-
-The task will execute all tests in src.antunit.ant.dir. The tests are located in `src/antunit/ant`. This is to 
-follow the standard maven project layout gradle follows. Output of the tests is generated in the console as 
-well as an junit xml and junit html.
+ant.xml adds an extension to the test phase which runs all antunit tests. The task will execute all tests in 
+src.antunit.ant.dir. The tests are located in `src/antunit/ant`. This is to follow the standard maven project 
+layout gradle follows. Output of the tests is generated in the console as well as an junit xml and junit html.
 
 ## making tests
 
-Testing a build.xml can be tricky. The tests should not use the normal build directory but the test reports 
-should go to the normal build directory. It is a good thing properties are imutable. A base xml file can be
-used to set project properties correctly before the project is included.
+Testing a build.xml can be tricky. ant.xml will move tests to the build directory and run them. This allows 
+local directories to be used and cleaned up without affecting the project sources.
+
+### test base
+
+A base xml file can be used to set project properties correctly before the project is included.
 
 ```
-<project basedir="../../../" xmlns:au="antlib:org.apache.ant.antunit">
-
+<project xmlns:au="antlib:org.apache.ant.antunit"> 
     <property name="build.dir" location="build/test-build"/>
-    <property name="build.cache" location="build/test-build-cache"/>
+    <property name="build.cache.dir" location="build/test-build-cache"/>
     <property name="reports.ant.unit.dir" location="build/reports/antunit"/>
-    <include file="../../../build.xml" as="project"/>
+    <import file="${antunit.build.base}"/>
 </project>
 ```
 
@@ -289,12 +269,10 @@ tests rather than project test targets. This base build file can be imported by 
 in the main project is available in tests. For example:
 
 ```
-<project basedir="../../../" xmlns:au="antlib:org.apache.ant.antunit">
-
+<project xmlns:au="antlib:org.apache.ant.antunit">
     <import file="project-base.xml"/>
-
     <target name="test-project-name">
-        <au:assertPropertyEquals name="ant.project.name" value="gradle-to-ant"/>
+        <au:assertPropertyEquals name="ant.project.name" value="base-project"/>
     </target>
 </project>
 ```
@@ -304,27 +282,26 @@ This tests the project name that is dynamically set to the project directory.
 All project tasks are available in tests prefixed with `project`. For example:
 
 ```
-<project basedir="../../../" xmlns:au="antlib:org.apache.ant.antunit">
+<project xmlns:au="antlib:org.apache.ant.antunit">
 
-    <import file="project-base.xml"/>
+    <include file="project-base.xml" as="project"/>
 
-    <target name="setUp" depends="project.clean-build-cache, project.install-ivy"/>
+    <target name="tearDown" depends="project.clean"/>
 
-    <target name="tearDown" depends="project.clean-build-cache"/>
-
-    <target name="test-install-ivy-clean">
-        <au:assertFileExists file="${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
-        <au:assertLogDoesntContain level="warning"
-            text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+    <target name="test-clean-no-build">
+        <au:assertFileDoesntExist file="${build.dir}"/>
+        <antcall target="project.clean"/>
+        <au:assertFileDoesntExist file="${build.dir}"/>
     </target>
 
-    <target name="test-install-ivy-cached">
-        <ant target="project.install-ivy" antfile="${ant.file}" inheritRefs="true"/>
-        <au:assertLogContains level="warning"
-            text="ivy installed at ${cache.download.dir}/ivy/ivy-${ivy.version}.jar"/>
+    <target name="test-clean">
+        <au:assertFileDoesntExist file="${build.dir}"/>
+        <antcall target="project.build"/>
+        <au:assertFileExists file="${build.dir}"/>
+        <antcall target="project.clean"/>
+        <au:assertFileDoesntExist file="${build.dir}"/>
     </target>
 </project>
 ```
 
-These tests execute the project targets and check the resulting files. The log is also checked for output 
-indicating the cache was used.
+These tests execute the project targets and check the resulting files.

@@ -2,7 +2,7 @@
     xmlns:if="ant:if"
     xmlns:unless="ant:unless">
     <description>
-        Applies base conventions to a project.
+        Provides base properties and targets which are useful to any build.
     </description>
 
     <basename property="ant.project.name" file="${basedir}"/>
@@ -20,41 +20,41 @@
     <property name="src.dir" location="src"/>
 
     <extension-point name="init" 
-        description="Initializes build by setting properties for targets. Targets can extend 'init' to setup execution of optional targets."/>
+        description="Entry point for initializing the build. Extensions should create directories, set properties for targets, and create condition properties for running configure targets."/>
     <extension-point name="clean" depends="init" 
-        description="Cleans build."/>
+        description="Entry point for cleaning the build. Extensions should delete directories."/>
     <extension-point name="cleanCaches" depends="init, cleanIvyCache, cleanBuildCache"
-        description="Cleans all caches."/>
-    <extension-point name="cleanAll" depends="clean, cleanCaches" 
-        description="Cleans everything"/>
+        description="Entry point for cleaning all caches. Extensions should delete caches"/>
+    <target name="cleanAll" depends="clean, cleanCaches" 
+        description="Cleans everything by calling clean and cleanCaches."/>
     <extension-point name="configure" depends="init, configureBuild" 
-        description="Configures targets."/>
-    <extension-point name="test" depends="configure" 
-        description="Executes all tests. Targets can extend 'test' to add tests."/>
+        description="Extension point for configuring the build and future targets. Extntensions should create properties, condition properties, and add third party tasks."/>
+    <extension-point name="test" depends="configure"
+        description="Extension point for running tests. Should execute all tests. Extensions should run specific types of tests."/>
     <extension-point name="check" depends="test"
-        description="Executes all checks. Targets can extend 'check' to add checks."/>
+        description="Extension point for all checks including tests. Extensions should add checks to the build."/>
     <extension-point name="assemble"
-        description="Assembles all packages."/>
-    <extension-point name="build" depends="check, assemble"
+        description="Extension point for assembling packages."/>
+    <target name="build" depends="check, assemble"
         description="Builds everything."/>
 
-    <target name="initBuild" extensionOf="init">
+    <target name="initBuild" extensionOf="init" description="Creates build directory.">
         <mkdir dir="${build.dir}"/>
     </target>
 
-    <target name="cleanBuild" extensionOf="clean">
+    <target name="cleanBuild" extensionOf="clean" description="Deletes build directory.">
         <delete dir="${build.dir}"/>
     </target>
 
-    <target name="cleanBuildCache">
+    <target name="cleanBuildCache" description="Deletes build cache.">
         <delete dir="${build.cache.dir}"/>
     </target>
 
-    <target name="cleanIvyCache" depends="installIvy">
+    <target name="cleanIvyCache" depends="installIvy" description="Cleans ivy cache.">
         <ivy:cleancache/>
     </target>
 
-    <target name="installIvy">
+    <target name="installIvy" description="Adds ivy jar to build cache and adds ivy tasks to project.">
         <local name="ivy.dir"/>
         <local name="ivy.file"/>
         <local name="ivy.available"/>
@@ -72,13 +72,13 @@
         <taskdef resource="org/apache/ivy/ant/antlib.xml" uri="antlib:org.apache.ivy.ant" classpath="${ivy.file}"/>
     </target>
 
-    <target name="initConfigureBuild" extensionOf="init">
+    <target name="initConfigureBuild" extensionOf="init" description="Sets run.configureBuild if ivy.xml is present.">
         <available file="ivy.xml" property="run.configureBuild"/>
     </target>
 
     <target name="configureBuild" depends="initConfigureBuild, installIvy" if="run.configureBuild" 
-        unless="skip.configureBuild">
-        <ivy:resolve/>
+        unless="skip.configureBuild" description="Resolves build configuration and creates build classpath.">
+        <ivy:resolve conf="build"/>
         <ivy:cachepath pathid="build.classpath" conf="build"/>
     </target>
 </project>

@@ -1,5 +1,4 @@
 <project xmlns:au="antlib:org.apache.ant.antunit">
-
     <property name="build.dir" location="build/test-build"/>
     <property name="build.cache.dir" location="build/test-build-cache"/>
     <property name="reports.ant.unit.dir" location="build/reports/antunit"/>
