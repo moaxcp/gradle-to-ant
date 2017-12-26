@@ -2,7 +2,7 @@
 
     <include file="project-base.xml" as="project"/>
 
-    <target name="tearDown" depends="project.clean"/>
+    <target name="tearDown" depends="project.clean, project.cleanBuild"/>
 
     <target name="test-clean-no-build">
         <au:assertFileDoesntExist file="${build.dir}"/>

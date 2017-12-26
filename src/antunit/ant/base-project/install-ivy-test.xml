@@ -3,6 +3,7 @@
     <include file="project-base.xml" as="project"/>
 
     <target name="suiteSetUp" depends="project.cleanBuildCache"/>
+    <target name="suiteTearDown" depends="project.clean, project.cleanBuild"/>
     <target name="tearDown" depends="project.cleanBuildCache"/>
 
     <target name="test-install-ivy-clean">

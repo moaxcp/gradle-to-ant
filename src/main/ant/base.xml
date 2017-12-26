@@ -18,6 +18,7 @@
     <property name="reports.dir" location="${build.dir}/reports"/>
 
     <property name="src.dir" location="src"/>
+    <property name="src.main.dir" location="${src.dir}/main"/>
 
     <extension-point name="init" 
         description="Entry point for initializing the build. Extensions should create directories, set properties for targets, and create condition properties for running configure targets."/>

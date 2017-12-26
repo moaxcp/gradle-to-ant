@@ -7,11 +7,15 @@
         Base project applying antunit conventions to build.
     </description>
 
-    <property name="reports.antunit.dir" location="${reports.dir}/antunit"/>
-
+    <property name="src.main.ant.dir" location="${src.main.dir}/ant"/>
     <property name="src.antunit.dir" location="${src.dir}/antunit"/>
     <property name="src.antunit.ant.dir" location="${src.antunit.dir}/ant"/>
-    <property name="build.antunit.dir" location="${build.dir}/antunit"/>
+
+    <property name="testAntUnit.reportsDir" location="${reports.dir}/antunit"/>
+    <property name="testAntUnit.runDir" location="${build.dir}/antunit"/>
+    <property name="testAntUnit.tests" value="**/*-test.xml"/>
+    <property name="testAntUnit.level" value="error"/>
+    <property name="testAntUnit.propertyPrefix" value="antunit"/>
 
     <extension-point name="prepareAntUnit"/>
 
@@ -29,22 +33,22 @@
     <target name="testAntUnit" depends="prepareAntUnit" extensionOf="test" description="Runs antunit tests.">
         <mkdir dir="${build.test.results.dir}"/>
         <au:antunit>
-            <fileset dir="${build.antunit.dir}">
-                <include name="**/*-test.xml"/>
+            <fileset dir="${src.antunit.ant.dir}">
+                <include name="${testAntUnit.tests}"/>
             </fileset>
-            <au:plainlistener logLevel="error"/>
+            <au:plainlistener logLevel="${testAntUnit.level}"/>
             <au:xmllistener todir="${build.test.results.dir}"/>
             <propertyset>
-                <propertyref prefix="antunit"/>
+                <propertyref prefix="${testAntUnit.propertyPrefix}"/>
             </propertyset>
         </au:antunit>
-        <delete dir="${reports.antunit.dir}"/>
-        <mkdir dir="${reports.antunit.dir}"/>
+        <delete dir="${testAntUnit.reportsDir}"/>
+        <mkdir dir="${testAntUnit.reportsDir}"/>
         <junitreport todir="${build.test.results.dir}">
             <fileset dir="${build.test.results.dir}">
                 <include name="TEST-*.xml"/>
             </fileset>
-            <report format="frames" todir="${reports.antunit.dir}/html"/>
+            <report format="frames" todir="${test.AntUnit.reportsDir}"/>
         </junitreport>
     </target>
 </project>
